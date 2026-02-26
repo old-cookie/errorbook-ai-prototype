@@ -1,0 +1,1 @@
+import{j as e}from"./index-BfPEUJob.js";function i({children:s,onClick:r,className:o="",padding:a="md"}){const d={sm:"p-3",md:"p-4",lg:"p-6"};return e.jsx("div",{onClick:r,className:`bg-white rounded-2xl border border-gray-200 shadow-sm ${d[a]} ${r?"cursor-pointer hover:shadow-md active:scale-[0.98]":""} transition-all ${o}`,children:s})}export{i as C};
