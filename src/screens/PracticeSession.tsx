@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, ReactNode } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { EriBubble } from '../components/EriBubble';
@@ -7,133 +7,169 @@ import { StepCard } from '../components/StepCard';
 import { HintToken } from '../components/HintToken';
 import { FractionBar } from '../components/FractionBar';
 import { EriCharacterSvg, EriCharacterState } from '../components/EriCharacterSvg';
-import { ChevronLeft, CheckCircle2, X, ArrowRight, Brain, Lightbulb, Target, ChevronRight } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, X, Brain, Lightbulb, Target, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EriFeedbackToast } from '../components/EriFeedbackToast';
-import { AppSettingsState, getAppSettings } from '../data/appState';
+import { AppSettingsState, getAppSettings, PracticeQuestionResult } from '../data/appState';
 
 interface PracticeSessionProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: string, data?: unknown) => void;
   onBack: () => void;
   onEriClick: () => void;
 }
 
-const practiceQuestions = [
+interface PracticeHint {
+  title: string;
+  visual: ReactNode;
+}
+
+interface QuestionPart {
+  id: string;
+  prompt: string;
+  acceptedAnswers: string[];
+  displayAnswer: string;
+}
+
+type PracticeQuestion = {
+  id: number;
+  question: string;
+  hints: PracticeHint[];
+} & (
+    | {
+      type: 'single';
+      acceptedAnswers: string[];
+      displayAnswer: string;
+    }
+    | {
+      type: 'multi';
+      parts: QuestionPart[];
+    }
+  );
+
+const practiceQuestions: PracticeQuestion[] = [
   {
+    type: 'single',
     id: 1,
-    question: 'Calculate 1/2 + 1/3',
-    correctAnswer: '5/6',
+    question: 'Calculate: 2 1/4 - 1.35 + 3/5\nGive your answer as a decimal correct to 2 decimal places.',
+    acceptedAnswers: ['1.5', '1.50'],
+    displayAnswer: '1.50',
     hints: [
       {
-        title: 'Hint 1: Check denominators',
-        visual: (
-          <div className="space-y-3">
-            <p className="text-center text-sm font-semibold text-gray-700">Denominators are different!</p>
-            <div className="flex justify-center gap-4">
-              <div className="text-center">
-                <FractionBar numerator={1} denominator={2} showHighlight color="#EF4444" />
-                <div className="mt-2 px-3 py-1 bg-yellow-100 border-2 border-yellow-400 rounded-full text-xs font-bold">
-                  2
-                </div>
-              </div>
-              <div className="text-center">
-                <FractionBar numerator={1} denominator={3} showHighlight color="#3B82F6" />
-                <div className="mt-2 px-3 py-1 bg-yellow-100 border-2 border-yellow-400 rounded-full text-xs font-bold">
-                  3
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      },
-      {
-        title: 'Hint 2: Find LCM',
-        visual: (
-          <div className="space-y-3">
-            <p className="text-center text-sm font-semibold text-gray-700">LCM(2, 3) = 6</p>
-            <div className="bg-[#6C5CE7]/10 rounded-xl p-4">
-              <div className="flex justify-around text-xs text-gray-600">
-                <div className="text-center">
-                  <p className="font-bold text-gray-900 mb-1">2:</p>
-                  <p>2, 4, <span className="text-[#6C5CE7] font-bold text-base">6</span></p>
-                </div>
-                <div className="text-center">
-                  <p className="font-bold text-gray-900 mb-1">3:</p>
-                  <p>3, <span className="text-[#6C5CE7] font-bold text-base">6</span></p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      },
-      {
-        title: 'Hint 3: Convert & add',
+        title: 'Hint 1: Convert to decimals',
         visual: (
           <div className="space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <div className="text-center">
-                <p className="text-xs text-gray-600 mb-1">1/2 = 3/6</p>
-                <FractionBar numerator={3} denominator={6} color="#10B981" />
+            <p className="text-center text-sm font-semibold text-gray-700">Convert each fraction term first</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white border border-gray-200 rounded-xl p-3 text-center">
+                <p className="text-xs text-gray-500 mb-2">2 1/4</p>
+                <FractionBar numerator={9} denominator={4} color="#6C5CE7" />
+                <p className="mt-2 text-sm font-bold text-[#6C5CE7]">= 2.25</p>
               </div>
-              <span className="text-lg font-bold text-gray-400">+</span>
-              <div className="text-center">
-                <p className="text-xs text-gray-600 mb-1">1/3 = 2/6</p>
-                <FractionBar numerator={2} denominator={6} color="#10B981" />
+              <div className="bg-white border border-gray-200 rounded-xl p-3 text-center">
+                <p className="text-xs text-gray-500 mb-2">3/5</p>
+                <FractionBar numerator={3} denominator={5} color="#10B981" />
+                <p className="mt-2 text-sm font-bold text-green-700">= 0.60</p>
               </div>
             </div>
-            <div className="flex justify-center">
-              <ArrowRight size={24} className="text-gray-400" />
+            <div className="bg-[#6C5CE7]/10 rounded-xl p-3 text-center">
+              <p className="text-lg font-bold text-gray-900">2.25 - 1.35 + 0.60</p>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-gray-700 mb-2">3 + 2 = 5</p>
-              <FractionBar numerator={5} denominator={6} color="#6C5CE7" />
+          </div>
+        )
+      },
+      {
+        title: 'Hint 2: Subtract first',
+        visual: (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-3">
+              <span className="text-sm font-semibold text-gray-700">Step 1</span>
+              <span className="text-base font-bold text-[#6C5CE7]">2.25 - 1.35 = 0.90</span>
             </div>
+            <div className="flex justify-center text-gray-400 text-xl">↓</div>
+            <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-3">
+              <span className="text-sm font-semibold text-gray-700">Step 2</span>
+              <span className="text-base font-bold text-green-700">0.90 + 0.60 = 1.50</span>
+            </div>
+          </div>
+        )
+      },
+      {
+        title: 'Hint 3: Final decimal',
+        visual: (
+          <div className="space-y-3 text-center">
+            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+              <p className="text-2xl font-bold text-green-900">1.50</p>
+            </div>
+            <p className="text-xs text-gray-600">Decimal to 2 d.p.: 1.50</p>
           </div>
         )
       }
     ]
   },
   {
+    type: 'multi',
     id: 2,
-    question: 'Solve: 3x - 7 = 11',
-    correctAnswer: 'x = 6',
+    question: 'A printing shop charges a setup fee of $18 and $4.5 for each worksheet. The total cost is $63.',
+    parts: [
+      {
+        id: 'a',
+        prompt: '(a) Let x be the number of worksheets. Write the linear equation.',
+        acceptedAnswers: ['18+4.5x=63', '4.5x+18=63'],
+        displayAnswer: '18 + 4.5x = 63',
+      },
+      {
+        id: 'b',
+        prompt: '(b) Solve for x.',
+        acceptedAnswers: ['10', 'x=10'],
+        displayAnswer: 'x = 10',
+      },
+    ],
     hints: [
       {
-        title: 'Hint 1: Isolate variable',
+        title: 'Hint 1: Identify fixed + variable cost',
+        visual: (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                <p className="text-xs text-orange-700">Fixed fee</p>
+                <p className="text-sm font-bold text-orange-900">$18</p>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                <p className="text-xs text-blue-700">Per sheet</p>
+                <p className="text-sm font-bold text-blue-900">$4.5 × x</p>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                <p className="text-xs text-green-700">Total</p>
+                <p className="text-sm font-bold text-green-900">$63</p>
+              </div>
+            </div>
+            <div className="bg-[#6C5CE7]/10 rounded-xl p-4 text-center">
+              <p className="text-lg font-bold text-gray-900">18 + 4.5x = 63</p>
+            </div>
+          </div>
+        )
+      },
+      {
+        title: 'Hint 2: Rearrange and simplify',
         visual: (
           <div className="space-y-3 text-center">
-            <p className="text-sm font-semibold text-gray-700">Add 7 to both sides</p>
+            <div className="bg-white border border-gray-200 rounded-xl p-3">
+              <p className="text-sm text-gray-600">18 + 4.5x = 63</p>
+            </div>
+            <p className="text-sm font-semibold text-gray-700">Subtract 18 on both sides</p>
             <div className="bg-gray-100 rounded-xl p-4">
-              <p className="text-lg font-bold text-gray-900">3x - 7 + 7 = 11 + 7</p>
+              <p className="text-lg font-bold text-gray-900">4.5x = 45</p>
             </div>
           </div>
         )
       },
       {
-        title: 'Hint 2: Simplify',
+        title: 'Hint 3: Solve for x',
         visual: (
           <div className="space-y-3 text-center">
-            <p className="text-lg font-bold text-gray-900">3x = 18</p>
-            <div className="flex items-center justify-center gap-3">
-              {[1, 2, 3].map((group) => (
-                <div key={group} className="flex flex-col gap-1">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="w-8 h-1 bg-[#6C5CE7] rounded" />
-                  ))}
-                  <p className="text-xs font-bold text-gray-700 mt-1">x</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      },
-      {
-        title: 'Hint 3: Divide by 3',
-        visual: (
-          <div className="space-y-3 text-center">
-            <p className="text-sm font-semibold text-gray-700">3x ÷ 3 = 18 ÷ 3</p>
+            <p className="text-sm font-semibold text-gray-700">Divide by 4.5</p>
             <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
-              <p className="text-2xl font-bold text-green-900">x = 6</p>
+              <p className="text-2xl font-bold text-green-900">x = 10</p>
             </div>
           </div>
         )
@@ -141,47 +177,126 @@ const practiceQuestions = [
     ]
   },
   {
+    type: 'multi',
     id: 3,
-    question: 'What is 20% of 150?',
-    correctAnswer: '30',
+    question: 'A bag has 2 red, 3 blue, and 1 green ball. Draw one, then another without replacement.',
+    parts: [
+      {
+        id: 'a',
+        prompt: '(a) List all possible ordered pairs of colours.',
+        acceptedAnswers: ['rr,rb,rg,br,bb,bg,gr,gb'],
+        displayAnswer: 'RR, RB, RG, BR, BB, BG, GR, GB',
+      }
+      ,
+      {
+        id: 'b',
+        prompt: '(b) Find P(both balls are blue).',
+        acceptedAnswers: ['1/5', '0.2'],
+        displayAnswer: '1/5',
+      },
+      {
+        id: 'c',
+        prompt: '(c) Find P(two balls are of different colours).',
+        acceptedAnswers: ['4/5', '0.8'],
+        displayAnswer: '4/5',
+      },
+    ],
     hints: [
       {
-        title: 'Hint 1: Convert percent',
+        title: 'Hint 1: Sample space by colours',
         visual: (
-          <div className="text-center space-y-3">
-            <p className="text-sm font-semibold text-gray-700">20% = 0.20</p>
-            <div className="grid grid-cols-10 gap-1">
-              {Array.from({ length: 100 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`aspect-square rounded ${
-                    i < 20 ? 'bg-[#6C5CE7]' : 'bg-gray-200'
-                  }`}
-                />
-              ))}
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 border border-red-200 rounded-full px-2 py-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
+                R = Red
+              </span>
+              <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 border border-blue-200 rounded-full px-2 py-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
+                B = Blue
+              </span>
+              <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 border border-green-200 rounded-full px-2 py-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />
+                G = Green
+              </span>
             </div>
-            <p className="text-xs text-gray-600">20 out of 100 squares</p>
+            <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-center">
+              {['RR', 'RB', 'RG', 'BR', 'BB', 'BG', 'GR', 'GB'].map((pair) => {
+                const tone: Record<string, string> = {
+                  R: 'bg-red-100 text-red-800 border-red-200',
+                  B: 'bg-blue-100 text-blue-800 border-blue-200',
+                  G: 'bg-green-100 text-green-800 border-green-200',
+                };
+
+                return (
+                  <div key={pair} className="bg-white border border-gray-200 rounded-lg p-1.5">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className={`w-6 h-6 rounded-md border inline-flex items-center justify-center ${tone[pair[0]]}`}>
+                        {pair[0]}
+                      </span>
+                      <span className="text-gray-400">→</span>
+                      <span className={`w-6 h-6 rounded-md border inline-flex items-center justify-center ${tone[pair[1]]}`}>
+                        {pair[1]}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )
       },
       {
-        title: 'Hint 2: Multiply',
+        title: 'Hint 2: Both blue',
         visual: (
           <div className="text-center space-y-3">
-            <p className="text-lg font-bold text-gray-900">0.20 × 150</p>
-            <div className="bg-[#6C5CE7]/10 rounded-xl p-4">
-              <p className="text-sm text-gray-700">= 20/100 × 150</p>
+            <p className="text-sm font-semibold text-gray-700">First draw blue, then blue again</p>
+            <div className="space-y-2">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5">
+                <p className="text-xs text-blue-700 mb-1">1st draw: 3 blue out of 6</p>
+                <div className="grid grid-cols-6 gap-1">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <span key={i} className={`h-2.5 rounded-full ${i < 3 ? 'bg-blue-500' : 'bg-gray-200'}`} />
+                  ))}
+                </div>
+                <p className="mt-1 text-sm font-bold text-blue-900">3/6</p>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5">
+                <p className="text-xs text-blue-700 mb-1">2nd draw: 2 blue out of 5</p>
+                <div className="grid grid-cols-5 gap-1">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span key={i} className={`h-2.5 rounded-full ${i < 2 ? 'bg-blue-500' : 'bg-gray-200'}`} />
+                  ))}
+                </div>
+                <p className="mt-1 text-sm font-bold text-blue-900">2/5</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-sm font-bold text-gray-700">
+              <span className="text-blue-900">3/6 × 2/5</span>
+              <span className="text-[#6C5CE7]">→</span>
+              <span className="text-[#6C5CE7]">1/5</span>
             </div>
           </div>
         )
       },
       {
-        title: 'Hint 3: Calculate',
+        title: 'Hint 3: Different colours',
         visual: (
           <div className="text-center space-y-3">
-            <p className="text-sm font-semibold text-gray-700">20 × 150 ÷ 100</p>
+            <p className="text-sm font-semibold text-gray-700">Use complement flow</p>
+            <div className="space-y-2 text-sm">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-2.5">
+                <p className="text-red-700 font-semibold">Same-colour outcomes</p>
+                <p className="font-bold text-red-900">RR + BB = 1/5</p>
+              </div>
+              <div className="flex justify-center text-gray-400 text-lg">↓</div>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5">
+                <p className="text-purple-700 font-semibold">Complement</p>
+                <p className="font-bold text-purple-900">P(different) = 1 - P(same)</p>
+              </div>
+            </div>
             <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
-              <p className="text-2xl font-bold text-green-900">= 30</p>
+              <p className="text-lg font-bold text-green-900">P(different) = 4/5</p>
             </div>
           </div>
         )
@@ -191,11 +306,25 @@ const practiceQuestions = [
 ];
 
 export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSessionProps) {
+  const normalizeAnswer = (value: string) => value.trim().toLowerCase().replace(/\s+/g, '');
+  const totalSubQuestions = practiceQuestions.reduce((sum, item) => {
+    return sum + (item.type === 'multi' ? item.parts.length : 1);
+  }, 0);
+  const getQuestionAnswerText = (item: PracticeQuestion) => {
+    if (item.type === 'single') {
+      return item.displayAnswer;
+    }
+
+    return item.parts.map((part) => `${part.id}) ${part.displayAnswer}`).join(' · ');
+  };
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answer, setAnswer] = useState('');
+  const [partAnswers, setPartAnswers] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
   const [showFeedbackToast, setShowFeedbackToast] = useState(false);
   const [score, setScore] = useState(0);
+  const [questionResults, setQuestionResults] = useState<PracticeQuestionResult[]>([]);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [showVisualCoach, setShowVisualCoach] = useState(false);
   const [showMetaCoach, setShowMetaCoach] = useState(false);
@@ -204,13 +333,14 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
   const [sessionId] = useState(() => `session-${Date.now()}`);
   const [characterState, setCharacterState] = useState<EriCharacterState>('idle');
   const [appSettings] = useState<AppSettingsState>(() => getAppSettings());
-  
+
   const question = practiceQuestions[currentQuestion];
-  
+
   const advanceToNext = useCallback(() => {
     if (currentQuestion < practiceQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setAnswer('');
+      setPartAnswers({});
       setFeedback(null);
       setShowFeedbackToast(false);
       setCurrentHint(0);
@@ -220,20 +350,69 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
       onNavigate('session-results', {
         sessionId,
         score,
-        total: practiceQuestions.length,
+        total: totalSubQuestions,
         hintsUsed,
+        questionResults,
+        missionMode: 'math-practice',
       });
     }
-  }, [currentQuestion, onNavigate, sessionId, score, hintsUsed]);
+  }, [currentQuestion, onNavigate, questionResults, score, sessionId, hintsUsed, totalSubQuestions]);
 
   const handleSubmit = () => {
-    const isCorrect = answer.trim().toLowerCase() === question.correctAnswer.toLowerCase();
-    setFeedback(isCorrect ? 'correct' : 'incorrect');
-    setCharacterState(isCorrect ? 'correct' : 'wrong');
-    setShowFeedbackToast(true);
-    if (isCorrect) {
-      setScore((prev) => prev + 1);
+    if (question.type === 'single') {
+      const normalized = normalizeAnswer(answer);
+      const acceptedAnswers = question.acceptedAnswers.map((item) => normalizeAnswer(item));
+      const isCorrect = acceptedAnswers.includes(normalized);
+      setFeedback(isCorrect ? 'correct' : 'incorrect');
+      setCharacterState(isCorrect ? 'correct' : 'wrong');
+      setQuestionResults((prev) => [
+        ...prev,
+        {
+          id: question.id,
+          question: question.question,
+          isCorrect,
+          userAnswer: answer,
+          acceptedAnswers: question.acceptedAnswers,
+        },
+      ]);
+      if (isCorrect) {
+        setScore((prev) => prev + 1);
+      }
+    } else {
+      const partResults = question.parts.map((part) => {
+        const currentAnswer = partAnswers[part.id] ?? '';
+        const normalized = normalizeAnswer(currentAnswer);
+        const acceptedAnswers = part.acceptedAnswers.map((item) => normalizeAnswer(item));
+        const isCorrect = acceptedAnswers.includes(normalized);
+
+        return {
+          id: part.id,
+          prompt: part.prompt,
+          userAnswer: currentAnswer,
+          acceptedAnswers: part.acceptedAnswers,
+          isCorrect,
+        };
+      });
+
+      const correctCount = partResults.filter((item) => item.isCorrect).length;
+      const isQuestionFullyCorrect = correctCount === question.parts.length;
+      setFeedback(isQuestionFullyCorrect ? 'correct' : 'incorrect');
+      setCharacterState(isQuestionFullyCorrect ? 'correct' : 'wrong');
+      setQuestionResults((prev) => [
+        ...prev,
+        {
+          id: question.id,
+          question: question.question,
+          isCorrect: isQuestionFullyCorrect,
+          parts: partResults,
+        },
+      ]);
+      if (correctCount > 0) {
+        setScore((prev) => prev + correctCount);
+      }
     }
+
+    setShowFeedbackToast(true);
   };
 
   const handleDismissToast = useCallback(() => {
@@ -246,13 +425,13 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
     setCharacterState('hint');
     setShowVisualCoach(true);
   };
-  
+
   const handleShowHint = () => {
     setHintsUsed((prev) => prev + 1);
     setCharacterState('hint');
     setShowVisualCoach(true);
   };
-  
+
   const handleNextHint = () => {
     if (currentHint < question.hints.length - 1) {
       setCurrentHint(currentHint + 1);
@@ -260,13 +439,17 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
       setCharacterState('hint');
     }
   };
-  
+
   const handleSelectHint = (index: number) => {
     if (index < unlockedHints) {
       setCurrentHint(index);
     }
   };
-  
+
+  const isSubmitDisabled = question.type === 'single'
+    ? !answer.trim()
+    : question.parts.some((part) => !(partAnswers[part.id] ?? '').trim());
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       {/* Header */}
@@ -286,7 +469,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
           </div>
         </div>
       </div>
-      
+
       {/* Progress Bar */}
       <div className="px-6 pt-4">
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -298,7 +481,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
           />
         </div>
       </div>
-      
+
       <div className="px-6 py-8 space-y-6">
         <AnimatePresence mode="wait">
           <motion.div
@@ -309,31 +492,66 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
           >
             {/* Question */}
             <Card padding="lg" className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">{question.question}</h2>
-              
+              <h2 className="text-xl font-bold text-gray-900 mb-6 whitespace-pre-line">{question.question}</h2>
+
               <div className="space-y-4">
-                <div>
-                  <label className="block text-gray-700 font-semibold mb-2">
-                    Your answer:
-                  </label>
-                  <input
-                    type="text"
-                    value={answer}
-                    onChange={(e) => {
-                      const nextValue = e.target.value;
-                      setAnswer(nextValue);
-                      if (!feedback) {
-                        setCharacterState(nextValue.trim() ? 'thinking' : 'idle');
-                      }
-                    }}
-                    placeholder="Type your answer..."
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#6C5CE7] focus:outline-none text-lg"
-                    disabled={feedback !== null}
-                  />
-                </div>
+                {question.type === 'single' ? (
+                  <div>
+                    <label className="block text-gray-700 font-semibold mb-2">
+                      Your answer:
+                    </label>
+                    <input
+                      type="text"
+                      value={answer}
+                      onChange={(e) => {
+                        const nextValue = e.target.value;
+                        setAnswer(nextValue);
+                        if (!feedback) {
+                          setCharacterState(nextValue.trim() ? 'thinking' : 'idle');
+                        }
+                      }}
+                      placeholder="Type your answer..."
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#6C5CE7] focus:outline-none text-lg"
+                      disabled={feedback !== null}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {question.parts.map((part) => (
+                      <div key={part.id}>
+                        <label className="block text-gray-700 font-semibold mb-2">
+                          {part.prompt}
+                        </label>
+                        <input
+                          type="text"
+                          value={partAnswers[part.id] ?? ''}
+                          onChange={(e) => {
+                            const nextValue = e.target.value;
+                            setPartAnswers((prev) => ({
+                              ...prev,
+                              [part.id]: nextValue,
+                            }));
+
+                            if (!feedback) {
+                              const allValues = {
+                                ...partAnswers,
+                                [part.id]: nextValue,
+                              };
+                              const hasAnyInput = question.parts.some((item) => (allValues[item.id] ?? '').trim());
+                              setCharacterState(hasAnyInput ? 'thinking' : 'idle');
+                            }
+                          }}
+                          placeholder="Type your answer..."
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#6C5CE7] focus:outline-none text-lg"
+                          disabled={feedback !== null}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </Card>
-            
+
             {/* Actions */}
             <div className="space-y-3">
               {!feedback && (
@@ -342,11 +560,11 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
                     onClick={handleSubmit}
                     size="lg"
                     fullWidth
-                    disabled={!answer.trim()}
+                    disabled={isSubmitDisabled}
                   >
                     Submit Answer
                   </Button>
-                  
+
                   <button
                     onClick={handleShowHint}
                     className="w-full px-6 py-4 rounded-2xl bg-white border-2 border-gray-200 hover:border-[#6C5CE7] hover:bg-[#6C5CE7]/5 transition-all cursor-pointer"
@@ -431,7 +649,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
           </Card>
         </div>
       )}
-      
+
       {/* Eri Bubble */}
       {appSettings.showEri && (
         <EriBubble
@@ -442,7 +660,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
           }}
         />
       )}
-      
+
       {/* Visual Coach - Hints */}
       <VisualCoachSheet
         isOpen={showVisualCoach}
@@ -462,7 +680,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
               />
             ))}
           </div>
-          
+
           {/* Visual Content */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -476,7 +694,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
               </Card>
             </motion.div>
           </AnimatePresence>
-          
+
           {/* Next Hint Button */}
           {currentHint < question.hints.length - 1 && (
             <Button
@@ -487,7 +705,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
               Unlock Next Hint ({currentHint + 2}/3)
             </Button>
           )}
-          
+
           {currentHint === question.hints.length - 1 && (
             <div className="text-center">
               <p className="text-sm text-gray-600">All hints revealed! 🎯</p>
@@ -495,7 +713,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
           )}
         </div>
       </VisualCoachSheet>
-      
+
       {/* Meta Coach - Practice Strategy */}
       <VisualCoachSheet
         isOpen={showMetaCoach}
@@ -506,7 +724,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
           <p className="text-gray-600 text-sm">
             Master these 3 techniques to get the most from every practice session:
           </p>
-          
+
           <StepCard
             step={1}
             title="Try First, Then Ask"
@@ -535,7 +753,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
               <p className="text-xs text-gray-500">💪 Struggling first = deeper learning!</p>
             </div>
           </StepCard>
-          
+
           <StepCard
             step={2}
             title="Use Hints Progressively"
@@ -560,7 +778,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
               <p className="text-xs text-gray-500">🎯 Each hint builds on the last</p>
             </div>
           </StepCard>
-          
+
           <StepCard
             step={3}
             title="Learn From Mistakes"
@@ -589,7 +807,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
               <p className="text-xs text-gray-500">📝 Mistakes = progress in disguise</p>
             </div>
           </StepCard>
-          
+
           <div className="bg-gradient-to-r from-[#6C5CE7] to-[#8B7FE8] rounded-2xl p-4 mt-4 text-white">
             <div className="flex items-start gap-3">
               <div className="text-2xl">🚀</div>
@@ -610,7 +828,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
         onClose={handleDismissToast}
         onShowHint={handleToastShowHint}
         onAdvance={advanceToNext}
-        correctAnswer={question.correctAnswer}
+        correctAnswer={getQuestionAnswerText(question)}
         type={feedback}
         questionIndex={currentQuestion}
       />

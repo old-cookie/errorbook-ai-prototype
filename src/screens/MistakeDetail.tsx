@@ -7,7 +7,6 @@ import { EriBubble } from '../components/EriBubble';
 import { VisualCoachSheet } from '../components/VisualCoachSheet';
 import { SplitView } from '../components/SplitView';
 import { StepCard } from '../components/StepCard';
-import { FractionBar } from '../components/FractionBar';
 import { ChevronLeft, Sparkles, Edit3, PlayCircle, X, CheckCircle2, Eye } from 'lucide-react';
 import { errorTypes } from '../data/mistakeData';
 import { motion } from 'motion/react';
@@ -23,12 +22,12 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
   const [showErrorTypeSheet, setShowErrorTypeSheet] = useState(false);
   const [selectedErrorType, setSelectedErrorType] = useState(mistake.errorType);
   const [showVisualCoach, setShowVisualCoach] = useState(false);
-  
+
   const handleSelectErrorType = (type: string) => {
     setSelectedErrorType(type);
     setShowErrorTypeSheet(false);
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       {/* Header */}
@@ -43,7 +42,7 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
           <h1 className="text-2xl font-bold text-gray-900">Mistake Card</h1>
         </div>
       </div>
-      
+
       <div className="px-6 py-6 space-y-6">
         {/* Question Card */}
         <motion.div
@@ -55,9 +54,9 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
               <Chip variant="default">{mistake.topic}</Chip>
               <span className="text-sm text-gray-500">{mistake.exam}</span>
             </div>
-            
+
             <h2 className="font-bold text-gray-900 mb-4 text-lg">{mistake.question}</h2>
-            
+
             <div className="space-y-3">
               <div className="flex gap-3">
                 <div className="p-2 bg-red-50 rounded-lg flex-shrink-0">
@@ -68,7 +67,7 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
                   <p className="font-medium text-gray-900">{mistake.myAnswer}</p>
                 </div>
               </div>
-              
+
               <div className="flex gap-3">
                 <div className="p-2 bg-green-50 rounded-lg flex-shrink-0">
                   <CheckCircle2 size={18} className="text-green-600" />
@@ -81,7 +80,7 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
             </div>
           </Card>
         </motion.div>
-        
+
         {/* AI Diagnosis */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -92,7 +91,7 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
             <Sparkles size={20} className="text-[#6C5CE7]" />
             <h3 className="text-lg font-bold text-gray-900">AI Diagnosis</h3>
           </div>
-          
+
           <Card padding="lg" className="bg-gradient-to-br from-[#6C5CE7]/5 to-purple-50 border-[#6C5CE7]/20">
             <div className="space-y-4">
               <div>
@@ -107,14 +106,14 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
                   </button>
                 </div>
               </div>
-              
+
               <div>
-                <p className="text-sm font-semibold text-gray-900">Added denominators directly</p>
+                <p className="text-sm font-semibold text-gray-900">{mistake.explanation}</p>
               </div>
             </div>
           </Card>
         </motion.div>
-        
+
         {/* Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -131,7 +130,7 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
           >
             Show Visual Explanation
           </Button>
-          
+
           <Button
             onClick={() => onNavigate('practice')}
             size="lg"
@@ -140,16 +139,16 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
           >
             Start Targeted Practice
           </Button>
-          
+
           <div className="text-center">
             <p className="text-sm text-gray-600">Next review: {mistake.dueDate}</p>
           </div>
         </motion.div>
       </div>
-      
+
       {/* Eri Bubble */}
       <EriBubble state="idle" onClick={onEriClick} />
-      
+
       {/* Error Type Bottom Sheet */}
       <BottomSheet
         isOpen={showErrorTypeSheet}
@@ -162,88 +161,73 @@ export function MistakeDetail({ mistake, onNavigate, onBack, onEriClick }: Mista
               key={type}
               onClick={() => handleSelectErrorType(type)}
               padding="md"
-              className={`${
-                selectedErrorType === type
+              className={`${selectedErrorType === type
                   ? 'border-[#6C5CE7] bg-[#6C5CE7]/5 border-2'
                   : 'border-gray-200'
-              }`}
+                }`}
             >
               <p className="font-medium text-gray-900">{type}</p>
             </Card>
           ))}
         </div>
       </BottomSheet>
-      
+
       {/* Visual Coach Sheet */}
       <VisualCoachSheet
         isOpen={showVisualCoach}
         onClose={() => setShowVisualCoach(false)}
-        title="Adding Fractions"
+        title={mistake.topic}
       >
         <div className="space-y-6">
           {/* Split View */}
           <SplitView
             yourStep={
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-red-900">3/4 + 2/5 = 5/9</p>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-2xl font-bold text-red-700">3+2</span>
-                  <span className="text-gray-400">/</span>
-                  <span className="text-2xl font-bold text-red-700">4+5</span>
-                </div>
+                <p className="text-sm text-gray-600">Your response</p>
+                <p className="text-sm font-semibold text-red-900">{mistake.myAnswer}</p>
               </div>
             }
             correctStep={
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-green-900">Find common denominator first</p>
-                <div className="flex items-center justify-center gap-2">
-                  <FractionBar numerator={15} denominator={20} color="#10B981" label="3/4" />
-                  <span className="text-xl font-bold text-gray-700">+</span>
-                  <FractionBar numerator={8} denominator={20} color="#10B981" label="2/5" />
-                </div>
+                <p className="text-sm text-gray-600">Target answer</p>
+                <p className="text-sm font-semibold text-green-900">{mistake.correctAnswer}</p>
               </div>
             }
           />
-          
+
           {/* Step Cards */}
           <div className="space-y-3">
             <StepCard
               stepNumber={1}
-              title="Find LCM of denominators"
+              title="Read key quantities"
               diagram={
                 <div className="space-y-2">
-                  <p className="text-center text-sm text-gray-700">LCM(4, 5) = <span className="font-bold text-[#6C5CE7] text-lg">20</span></p>
-                  <div className="flex justify-center gap-4 text-xs text-gray-600">
-                    <div>4: 4, 8, 12, 16, <span className="font-bold text-[#6C5CE7]">20</span></div>
-                    <div>5: 5, 10, 15, <span className="font-bold text-[#6C5CE7]">20</span></div>
-                  </div>
+                  <p className="text-center text-sm text-gray-700">Identify what is fixed, what varies, and what the question asks for.</p>
                 </div>
               }
               delay={0.2}
             />
-            
+
             <StepCard
               stepNumber={2}
-              title="Convert to common denominator"
+              title="Set up the method"
               diagram={
                 <div className="space-y-3">
                   <div className="text-center">
-                    <p className="text-sm text-gray-700 mb-1">3/4 × 5/5 = <span className="font-bold text-[#6C5CE7]">15/20</span></p>
-                    <p className="text-sm text-gray-700">2/5 × 4/4 = <span className="font-bold text-[#6C5CE7]">8/20</span></p>
+                    <p className="text-sm text-gray-700">Write each step clearly before calculating.</p>
                   </div>
                 </div>
               }
               delay={0.3}
             />
-            
+
             <StepCard
               stepNumber={3}
-              title="Add numerators"
+              title="Check and compare"
               diagram={
                 <div className="text-center space-y-2">
-                  <p className="text-lg font-bold text-gray-900">15/20 + 8/20</p>
-                  <p className="text-xl font-bold text-[#6C5CE7]">= 23/20</p>
-                  <FractionBar numerator={23} denominator={20} filled={20} color="#6C5CE7" />
+                  <p className="text-sm text-gray-700">Compare your final expression with the expected format and value.</p>
+                  <p className="text-sm font-semibold text-[#6C5CE7]">Then retry a similar problem.</p>
                 </div>
               }
               delay={0.4}

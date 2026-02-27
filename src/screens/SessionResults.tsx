@@ -80,11 +80,10 @@ function EriHero({ isPerfect, reduceMotion }: { isPerfect: boolean; reduceMotion
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className={`absolute w-32 h-32 rounded-full ${
-          isPerfect
+        className={`absolute w-32 h-32 rounded-full ${isPerfect
             ? 'bg-gradient-to-br from-yellow-200/40 to-amber-200/40'
             : 'bg-gradient-to-br from-[#6C5CE7]/15 to-[#8B7FE8]/15'
-        }`}
+          }`}
       />
 
       {/* Avatar circle */}
@@ -268,11 +267,13 @@ function QuestionResult({
   question,
   correct,
   delay,
+  details,
 }: {
   index: number;
   question: string;
   correct: boolean;
   delay: number;
+  details?: Array<{ label: string; correct: boolean }>;
 }) {
   return (
     <motion.div
@@ -282,11 +283,10 @@ function QuestionResult({
       className="flex items-center gap-3 py-2.5"
     >
       <div
-        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-          correct
+        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${correct
             ? 'bg-green-100 text-green-600'
             : 'bg-red-100 text-red-500'
-        }`}
+          }`}
       >
         {correct ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -298,7 +298,24 @@ function QuestionResult({
           </svg>
         )}
       </div>
-      <span className="text-sm text-gray-700 flex-1">Q{index + 1}: {question}</span>
+      <div className="flex-1">
+        <span className="text-sm text-gray-700">Q{index + 1}: {question}</span>
+        {details && details.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {details.map((detail) => (
+              <span
+                key={detail.label}
+                className={`text-[11px] px-2 py-0.5 rounded-full ${detail.correct
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-600'
+                  }`}
+              >
+                {detail.label}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -315,7 +332,7 @@ export function SessionResults({ onNavigate, onEriClick, score = 2, total = 3, s
   const levelXP = 400;
   const missionTitle = isEnglishMission
     ? 'English Mission – Write, Speak, Listening'
-    : 'Fractions – Adding Unlike Denominators';
+    : 'KS3 Maths Mixed Practice';
 
   useEffect(() => {
     if (!summary) {
@@ -329,24 +346,29 @@ export function SessionResults({ onNavigate, onEriClick, score = 2, total = 3, s
 
   const questions = isEnglishMission
     ? [
-        {
-          question: `Write task (${summary?.english?.writeChars ?? 0} chars)`,
-          correct: (summary?.english?.writeChars ?? 0) >= 12,
-        },
-        {
-          question: `Speak task (${summary?.english?.speakTurns ?? 0} turn${(summary?.english?.speakTurns ?? 0) === 1 ? '' : 's'})`,
-          correct: (summary?.english?.speakTurns ?? 0) > 0,
-        },
-        {
-          question: `Listening task (${summary?.english?.listeningTurns ?? 0} turn${(summary?.english?.listeningTurns ?? 0) === 1 ? '' : 's'})`,
-          correct: (summary?.english?.listeningTurns ?? 0) > 0,
-        },
-      ]
-    : [
-        { question: 'Calculate 1/2 + 1/3', correct: true },
-        { question: 'Solve: 3x − 7 = 11', correct: false },
-        { question: 'What is 20% of 150?', correct: true },
-      ];
+      {
+        question: `Write task (${summary?.english?.writeChars ?? 0} chars)`,
+        correct: (summary?.english?.writeChars ?? 0) >= 12,
+      },
+      {
+        question: `Speak task (${summary?.english?.speakTurns ?? 0} turn${(summary?.english?.speakTurns ?? 0) === 1 ? '' : 's'})`,
+        correct: (summary?.english?.speakTurns ?? 0) > 0,
+      },
+      {
+        question: `Listening task (${summary?.english?.listeningTurns ?? 0} turn${(summary?.english?.listeningTurns ?? 0) === 1 ? '' : 's'})`,
+        correct: (summary?.english?.listeningTurns ?? 0) > 0,
+      },
+    ]
+    : (summary?.questionResults?.length
+      ? summary.questionResults.map((item) => ({
+        question: item.question,
+        correct: item.isCorrect,
+        details: item.parts?.map((part) => ({
+          label: `${part.id.toUpperCase()}: ${part.isCorrect ? '✓' : '✕'}`,
+          correct: part.isCorrect,
+        })),
+      }))
+      : []);
   // Adjust based on score prop for demo
   const displayQuestions = questions.map((q) => ({
     ...q,
@@ -413,6 +435,7 @@ export function SessionResults({ onNavigate, onEriClick, score = 2, total = 3, s
                 index={i}
                 question={q.question}
                 correct={q.correct}
+                details={'details' in q ? q.details : undefined}
                 delay={1.1 + i * 0.12}
               />
             ))}

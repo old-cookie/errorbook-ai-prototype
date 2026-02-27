@@ -18,6 +18,7 @@ export interface PracticeSessionSummary {
   score: number;
   total: number;
   hintsUsed: number;
+  questionResults?: PracticeQuestionResult[];
   missionMode?: 'math-practice' | 'english';
   english?: {
     completedPhases: Array<'write' | 'speak' | 'listening'>;
@@ -25,6 +26,23 @@ export interface PracticeSessionSummary {
     speakTurns: number;
     listeningTurns: number;
   };
+}
+
+export interface PracticeQuestionPartResult {
+  id: string;
+  prompt: string;
+  userAnswer: string;
+  acceptedAnswers: string[];
+  isCorrect: boolean;
+}
+
+export interface PracticeQuestionResult {
+  id: number;
+  question: string;
+  isCorrect: boolean;
+  userAnswer?: string;
+  acceptedAnswers?: string[];
+  parts?: PracticeQuestionPartResult[];
 }
 
 export interface PracticeRewards {
