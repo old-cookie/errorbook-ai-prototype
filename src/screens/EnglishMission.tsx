@@ -4,8 +4,9 @@ import { motion } from 'motion/react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { EriCharacterSvg, EriCharacterState } from '../components/EriCharacterSvg';
-import { AppSettingsState, getAppSettings } from '../data/appState';
 import { EnglishMissionPhase, englishMissionSteps } from '../data/englishMissionData';
+import { useAppSettings } from '../data/useAppSettings';
+import { useGameProgress } from '../data/useGameProgress';
 
 interface EnglishMissionProps {
   onNavigate: (screen: string, data?: any) => void;
@@ -25,7 +26,8 @@ const phaseCharacterMap: Record<EnglishMissionPhase, EriCharacterState> = {
 };
 
 export function EnglishMission({ onNavigate, onBack }: EnglishMissionProps) {
-  const [appSettings] = useState<AppSettingsState>(() => getAppSettings());
+  const appSettings = useAppSettings();
+  const progressState = useGameProgress();
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [writingText, setWritingText] = useState('');
   const [speakTurns, setSpeakTurns] = useState(0);
@@ -132,6 +134,9 @@ export function EnglishMission({ onNavigate, onBack }: EnglishMissionProps) {
               <EriCharacterSvg
                 state={phaseCharacterMap[activeStep.phase]}
                 reduceMotion={appSettings.reduceMotion}
+                colorVariant={appSettings.eriColor}
+                hatId={progressState.equippedHat}
+                clothesId={progressState.equippedClothes}
                 size={188}
                 className="mb-3"
               />

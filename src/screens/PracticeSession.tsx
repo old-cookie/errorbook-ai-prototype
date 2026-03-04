@@ -10,7 +10,9 @@ import { EriCharacterSvg, EriCharacterState } from '../components/EriCharacterSv
 import { ChevronLeft, CheckCircle2, X, Brain, Lightbulb, Target, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EriFeedbackToast } from '../components/EriFeedbackToast';
-import { AppSettingsState, getAppSettings, PracticeQuestionResult } from '../data/appState';
+import { PracticeQuestionResult } from '../data/appState';
+import { useAppSettings } from '../data/useAppSettings';
+import { useGameProgress } from '../data/useGameProgress';
 
 interface PracticeSessionProps {
   onNavigate: (screen: string, data?: unknown) => void;
@@ -332,7 +334,8 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
   const [unlockedHints, setUnlockedHints] = useState(1);
   const [sessionId] = useState(() => `session-${Date.now()}`);
   const [characterState, setCharacterState] = useState<EriCharacterState>('idle');
-  const [appSettings] = useState<AppSettingsState>(() => getAppSettings());
+  const appSettings = useAppSettings();
+  const progressState = useGameProgress();
 
   const question = practiceQuestions[currentQuestion];
 
@@ -629,6 +632,9 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
               <EriCharacterSvg
                 state={characterState}
                 reduceMotion={appSettings.reduceMotion}
+                colorVariant={appSettings.eriColor}
+                hatId={progressState.equippedHat}
+                clothesId={progressState.equippedClothes}
                 size={92}
               />
               <div className="flex-1">
@@ -639,7 +645,7 @@ export function PracticeSession({ onNavigate, onBack, onEriClick }: PracticeSess
                     : characterState === 'wrong'
                       ? 'No worries—use hints step by step and retry the logic.'
                       : characterState === 'hint'
-                        ? 'I unlocked a visual hint. Try the next step yourself first.'
+                        ? 'What is the first operation you should do here? Try that step, then check whether the result is reasonable.'
                         : characterState === 'thinking'
                           ? 'Nice thinking. Check your final arithmetic once more.'
                           : 'I am here while you solve. Start with your first step.'}

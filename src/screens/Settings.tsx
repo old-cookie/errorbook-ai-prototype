@@ -3,12 +3,15 @@ import { Card } from '../components/Card';
 import { ChevronLeft, Share2, Type, Zap, Download, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getAppSettings, updateAppSettings } from '../data/appState';
+import { ERI_COLOR_THEMES, EriColorVariant } from '../data/eriColor';
+import { useAppSettings } from '../data/useAppSettings';
 
 interface SettingsProps {
   onBack: () => void;
 }
 
 export function Settings({ onBack }: SettingsProps) {
+  const appSettings = useAppSettings();
   const [sharingEnabled, setSharingEnabled] = useState(true);
   const [textSize, setTextSize] = useState('medium');
   const [reduceMotion, setReduceMotion] = useState(getAppSettings().reduceMotion);
@@ -17,7 +20,7 @@ export function Settings({ onBack }: SettingsProps) {
   useEffect(() => {
     updateAppSettings({ reduceMotion, showEri });
   }, [reduceMotion, showEri]);
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       {/* Header */}
@@ -32,7 +35,7 @@ export function Settings({ onBack }: SettingsProps) {
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
         </div>
       </div>
-      
+
       <div className="px-6 py-6 space-y-6">
         {/* Privacy */}
         <motion.div
@@ -43,7 +46,7 @@ export function Settings({ onBack }: SettingsProps) {
             <Share2 size={20} className="text-[#6C5CE7]" />
             <h3 className="text-lg font-bold text-gray-900">Privacy</h3>
           </div>
-          
+
           <Card padding="md">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -64,7 +67,7 @@ export function Settings({ onBack }: SettingsProps) {
             </div>
           </Card>
         </motion.div>
-        
+
         {/* Accessibility */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -75,7 +78,7 @@ export function Settings({ onBack }: SettingsProps) {
             <Type size={20} className="text-[#6C5CE7]" />
             <h3 className="text-lg font-bold text-gray-900">Accessibility</h3>
           </div>
-          
+
           <div className="space-y-3">
             <Card padding="md">
               <div className="flex items-center justify-between">
@@ -94,7 +97,7 @@ export function Settings({ onBack }: SettingsProps) {
                 </select>
               </div>
             </Card>
-            
+
             <Card padding="md">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -116,7 +119,7 @@ export function Settings({ onBack }: SettingsProps) {
             </Card>
           </div>
         </motion.div>
-        
+
         {/* AI Assistant */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -127,28 +130,62 @@ export function Settings({ onBack }: SettingsProps) {
             <Zap size={20} className="text-[#6C5CE7]" />
             <h3 className="text-lg font-bold text-gray-900">AI Assistant</h3>
           </div>
-          
-          <Card padding="md">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Show Eri Assistant</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Display AI coach bubble and tips
-                </p>
+
+          <div className="space-y-3">
+            <Card padding="md">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Show Eri Assistant</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Display AI coach bubble and tips
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer ml-4">
+                  <input
+                    type="checkbox"
+                    checked={showEri}
+                    onChange={(e) => setShowEri(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#6C5CE7]/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6C5CE7]" />
+                </label>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer ml-4">
-                <input
-                  type="checkbox"
-                  checked={showEri}
-                  onChange={(e) => setShowEri(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#6C5CE7]/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6C5CE7]" />
-              </label>
-            </div>
-          </Card>
+            </Card>
+
+            <Card padding="md">
+              <p className="font-medium text-gray-900">Eri Color</p>
+              <p className="text-sm text-gray-600 mt-1 mb-3">
+                Choose Eri&apos;s body color
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(ERI_COLOR_THEMES) as EriColorVariant[]).map((variant) => {
+                  const palette = ERI_COLOR_THEMES[variant];
+                  const isSelected = appSettings.eriColor === variant;
+
+                  return (
+                    <button
+                      key={variant}
+                      onClick={() => updateAppSettings({ eriColor: variant })}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors ${isSelected
+                          ? 'border-[#6C5CE7] bg-[#6C5CE7]/5'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
+                    >
+                      <span
+                        className="w-4 h-4 rounded-full border border-white/60 shadow-sm"
+                        style={{
+                          background: `linear-gradient(135deg, ${palette.bodyStart} 0%, ${palette.bodyMid} 60%, ${palette.bodyEnd} 100%)`,
+                        }}
+                      />
+                      <span className="text-sm font-medium text-gray-700">{palette.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          </div>
         </motion.div>
-        
+
         {/* Data */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -159,7 +196,7 @@ export function Settings({ onBack }: SettingsProps) {
             <Download size={20} className="text-[#6C5CE7]" />
             <h3 className="text-lg font-bold text-gray-900">Data</h3>
           </div>
-          
+
           <Card padding="md">
             <button className="w-full flex items-center justify-between group">
               <div className="flex items-center gap-3">
@@ -177,7 +214,7 @@ export function Settings({ onBack }: SettingsProps) {
             </button>
           </Card>
         </motion.div>
-        
+
         {/* App Info */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

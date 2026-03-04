@@ -21,8 +21,9 @@ import {
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { AppSettingsState, GameProgressState, getAppSettings, getGameProgress } from '../data/appState';
 import { EriCharacterSvg } from '../components/EriCharacterSvg';
+import { useAppSettings } from '../data/useAppSettings';
+import { useGameProgress } from '../data/useGameProgress';
 
 interface ProgressProps {
   onNavigate: (screen: string) => void;
@@ -79,8 +80,8 @@ const badgeCategories = [
 export function Progress({ onNavigate, onEriClick }: ProgressProps) {
   const [showVisualCoach, setShowVisualCoach] = useState(false);
   const [showStreakFreezeModal, setShowStreakFreezeModal] = useState(false);
-  const [progressState] = useState<GameProgressState>(() => getGameProgress());
-  const [appSettings] = useState<AppSettingsState>(() => getAppSettings());
+  const progressState = useGameProgress();
+  const appSettings = useAppSettings();
 
   const currentXp = progressState.totalXP;
   const nextLevelXp = 1500;
@@ -112,6 +113,9 @@ export function Progress({ onNavigate, onEriClick }: ProgressProps) {
                 <EriCharacterSvg
                   state={progressState.streakDays >= 7 ? 'correct' : 'thinking'}
                   reduceMotion={appSettings.reduceMotion}
+                  colorVariant={appSettings.eriColor}
+                  hatId={progressState.equippedHat}
+                  clothesId={progressState.equippedClothes}
                   size={82}
                 />
                 <div className="flex-1">
@@ -263,11 +267,10 @@ export function Progress({ onNavigate, onEriClick }: ProgressProps) {
               {weeklyData.map((item) => (
                 <div
                   key={item.day}
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] border ${
-                    item.practiced
-                      ? 'bg-orange-50 text-orange-600 border-orange-200'
-                      : 'bg-gray-100 text-gray-500 border-gray-200'
-                  }`}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] border ${item.practiced
+                    ? 'bg-orange-50 text-orange-600 border-orange-200'
+                    : 'bg-gray-100 text-gray-500 border-gray-200'
+                    }`}
                 >
                   <Flame size={10} />
                   <span>{item.day}</span>

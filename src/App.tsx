@@ -15,10 +15,11 @@ const Progress = lazy(() => import('./screens/Progress').then((mod) => ({ defaul
 const BadgeUnlocked = lazy(() => import('./screens/BadgeUnlocked').then((mod) => ({ default: mod.BadgeUnlocked })));
 const Settings = lazy(() => import('./screens/Settings').then((mod) => ({ default: mod.Settings })));
 const EriProgress = lazy(() => import('./screens/EriProgress').then((mod) => ({ default: mod.EriProgress })));
+const EriCustomize = lazy(() => import('./screens/EriCustomize').then((mod) => ({ default: mod.EriCustomize })));
 const EnglishMission = lazy(() => import('./screens/EnglishMission').then((mod) => ({ default: mod.EnglishMission })));
 const MissionChoice = lazy(() => import('./screens/MissionChoice').then((mod) => ({ default: mod.MissionChoice })));
 
-type Screen = 
+type Screen =
   | 'splash'
   | 'onboarding'
   | 'home'
@@ -31,6 +32,7 @@ type Screen =
   | 'progress'
   | 'settings'
   | 'eri-progress'
+  | 'eri-customize'
   | 'english-mission'
   | 'mission-choice';
 
@@ -52,18 +54,18 @@ export default function App() {
       setShowBadgeModal(true);
       return;
     }
-    
+
     // Store current screen in navigation stack for back navigation
     if (!['splash', 'onboarding'].includes(currentScreen)) {
       setNavigationStack([...navigationStack, currentScreen]);
     }
-    
+
     if (screen === 'session-results' && data) {
       setSessionSummary(data as PracticeSessionSummary);
     } else if (data) {
       setSelectedMistake(data);
     }
-    
+
     setCurrentScreen(screen as Screen);
   };
 
@@ -82,7 +84,7 @@ export default function App() {
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setNavigationStack([]); // Clear navigation stack when switching tabs
-    
+
     // Map tabs to screens
     const tabScreenMap: Record<Tab, Screen> = {
       home: 'home',
@@ -90,7 +92,7 @@ export default function App() {
       review: 'review',
       progress: 'progress'
     };
-    
+
     setCurrentScreen(tabScreenMap[tab]);
   };
 
@@ -103,7 +105,7 @@ export default function App() {
     switch (currentScreen) {
       case 'splash':
         return <Splash onComplete={() => setCurrentScreen('onboarding')} />;
-      
+
       case 'onboarding':
         return (
           <Onboarding
@@ -113,16 +115,16 @@ export default function App() {
             }}
           />
         );
-      
+
       case 'home':
         return <Home onNavigate={handleNavigate} onEriClick={handleEriClick} />;
-      
+
       case 'capture':
         return <Capture onNavigate={handleNavigate} onBack={handleBack} />;
-      
+
       case 'capture-details':
         return <CaptureDetails onNavigate={handleNavigate} onBack={handleBack} onEriClick={handleEriClick} />;
-      
+
       case 'mistake-detail':
         return (
           <MistakeDetail
@@ -132,7 +134,7 @@ export default function App() {
             onEriClick={handleEriClick}
           />
         );
-      
+
       case 'practice':
         return <PracticeSession onNavigate={handleNavigate} onBack={handleBack} onEriClick={handleEriClick} />;
 
@@ -141,7 +143,7 @@ export default function App() {
 
       case 'mission-choice':
         return <MissionChoice onNavigate={handleNavigate} onBack={handleBack} />;
-      
+
       case 'session-results':
         return (
           <SessionResults
@@ -150,19 +152,22 @@ export default function App() {
             summary={sessionSummary ?? undefined}
           />
         );
-      
+
       case 'review':
         return <Review onNavigate={handleNavigate} />;
-      
+
       case 'progress':
         return <Progress onNavigate={handleNavigate} onEriClick={handleEriClick} />;
-      
+
       case 'settings':
         return <Settings onBack={handleBack} />;
 
       case 'eri-progress':
-        return <EriProgress onBack={handleBack} />;
-      
+        return <EriProgress onBack={handleBack} onNavigate={handleNavigate} />;
+
+      case 'eri-customize':
+        return <EriCustomize onBack={handleBack} />;
+
       default:
         return <Home onNavigate={handleNavigate} onEriClick={handleEriClick} />;
     }
@@ -183,12 +188,12 @@ export default function App() {
         >
           {renderScreen()}
         </Suspense>
-        
+
         {/* Bottom Navigation */}
         {showBottomNav && (
           <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
         )}
-        
+
         {/* Badge Unlocked Modal */}
         <Suspense fallback={null}>
           <BadgeUnlocked

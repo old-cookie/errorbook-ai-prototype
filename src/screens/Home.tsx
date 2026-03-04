@@ -8,8 +8,9 @@ import { Settings, Plus, PlayCircle, Clock, AlertCircle, Target, Calendar, Zap, 
 import { mistakeData } from '../data/mistakeData';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
-import { AppSettingsState, GameProgressState, getAppSettings, getGameProgress } from '../data/appState';
 import { EriCharacterSvg } from '../components/EriCharacterSvg';
+import { useAppSettings } from '../data/useAppSettings';
+import { useGameProgress } from '../data/useGameProgress';
 
 interface HomeProps {
   onNavigate: (screen: string, data?: any) => void;
@@ -18,8 +19,8 @@ interface HomeProps {
 
 export function Home({ onNavigate, onEriClick }: HomeProps) {
   const [showVisualCoach, setShowVisualCoach] = useState(false);
-  const [progressState] = useState<GameProgressState>(() => getGameProgress());
-  const [appSettings] = useState<AppSettingsState>(() => getAppSettings());
+  const progressState = useGameProgress();
+  const appSettings = useAppSettings();
   const [missions, setMissions] = useState([
     {
       id: 'capture',
@@ -56,7 +57,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
       )
     );
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       {/* Header */}
@@ -82,7 +83,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
           </div>
         </div>
       </div>
-      
+
       <div className="px-6 py-6 space-y-6">
         {appSettings.showEri && (
           <motion.div
@@ -92,8 +93,11 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
             <Card padding="md" className="bg-gradient-to-r from-[#6C5CE7]/5 to-[#8B7FE8]/10 border-[#6C5CE7]/20">
               <div className="flex items-center gap-4">
                 <EriCharacterSvg
-                      state={completedMissions >= 2 ? 'correct' : 'idle'}
+                  state={completedMissions >= 2 ? 'correct' : 'idle'}
                   reduceMotion={appSettings.reduceMotion}
+                  colorVariant={appSettings.eriColor}
+                  hatId={progressState.equippedHat}
+                  clothesId={progressState.equippedClothes}
                   size={82}
                 />
                 <div className="flex-1">
@@ -188,7 +192,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
             </div>
           </Card>
         </motion.div>
-        
+
         {/* Quick Add */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -204,7 +208,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
             Add a Mistake
           </Button>
         </motion.div>
-        
+
         {/* Due for Review */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -218,7 +222,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
             </h3>
             <span className="text-sm text-gray-500">{dueItems.length} items</span>
           </div>
-          
+
           <div className="space-y-3">
             {dueItems.map((mistake, index) => (
               <motion.div
@@ -281,7 +285,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Eri Bubble */}
       {appSettings.showEri && (
         <EriBubble
@@ -292,7 +296,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
           }}
         />
       )}
-      
+
       {/* Visual Coach Sheet */}
       <VisualCoachSheet
         isOpen={showVisualCoach}
@@ -303,7 +307,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
           <p className="text-gray-600 text-sm">
             Master your mistakes with this proven 3-step system:
           </p>
-          
+
           <StepCard
             step={1}
             title="Complete Daily Mission"
@@ -325,7 +329,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
               <p className="text-xs text-gray-500">📊 Students who practice daily improve 42% faster</p>
             </div>
           </StepCard>
-          
+
           <StepCard
             step={2}
             title="Review What's Due"
@@ -352,7 +356,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
               <p className="text-xs text-gray-500">🔄 Review at optimal intervals boosts retention by 3x</p>
             </div>
           </StepCard>
-          
+
           <StepCard
             step={3}
             title="Add New Mistakes"
@@ -377,7 +381,7 @@ export function Home({ onNavigate, onEriClick }: HomeProps) {
               <p className="text-xs text-gray-500">⚡ Students with 10+ mistakes show 68% better exam scores</p>
             </div>
           </StepCard>
-          
+
           <div className="bg-gradient-to-r from-[#6C5CE7] to-[#8B7FE8] rounded-2xl p-4 mt-4 text-white">
             <div className="flex items-start gap-3">
               <div className="text-2xl">🔥</div>

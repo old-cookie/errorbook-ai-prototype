@@ -4,13 +4,14 @@ import { Star, Home, RotateCcw, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EriCharacterSvg } from '../components/EriCharacterSvg';
 import {
-  AppSettingsState,
   PracticeSessionSummary,
   applyPracticeSession,
   estimateSessionXP,
-  getAppSettings,
   getGameProgress,
 } from '../data/appState';
+import { EriColorVariant } from '../data/eriColor';
+import { useAppSettings } from '../data/useAppSettings';
+import { useGameProgress } from '../data/useGameProgress';
 
 interface SessionResultsProps {
   onNavigate: (screen: string) => void;
@@ -72,7 +73,19 @@ function FloatingXP({ value, delay }: { value: number; delay: number }) {
 }
 
 /* ─── Eri Avatar (large hero) ─── */
-function EriHero({ isPerfect, reduceMotion }: { isPerfect: boolean; reduceMotion: boolean }) {
+function EriHero({
+  isPerfect,
+  reduceMotion,
+  colorVariant,
+  hatId,
+  clothesId,
+}: {
+  isPerfect: boolean;
+  reduceMotion: boolean;
+  colorVariant: EriColorVariant;
+  hatId: string;
+  clothesId: string;
+}) {
   return (
     <div className="relative flex items-center justify-center">
       {/* Glow ring */}
@@ -81,8 +94,8 @@ function EriHero({ isPerfect, reduceMotion }: { isPerfect: boolean; reduceMotion
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6 }}
         className={`absolute w-32 h-32 rounded-full ${isPerfect
-            ? 'bg-gradient-to-br from-yellow-200/40 to-amber-200/40'
-            : 'bg-gradient-to-br from-[#6C5CE7]/15 to-[#8B7FE8]/15'
+          ? 'bg-gradient-to-br from-yellow-200/40 to-amber-200/40'
+          : 'bg-gradient-to-br from-[#6C5CE7]/15 to-[#8B7FE8]/15'
           }`}
       />
 
@@ -96,6 +109,9 @@ function EriHero({ isPerfect, reduceMotion }: { isPerfect: boolean; reduceMotion
         <EriCharacterSvg
           state={isPerfect ? 'correct' : 'idle'}
           reduceMotion={reduceMotion}
+          colorVariant={colorVariant}
+          hatId={hatId}
+          clothesId={clothesId}
           size={112}
           className="drop-shadow-lg"
         />
@@ -284,8 +300,8 @@ function QuestionResult({
     >
       <div
         className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${correct
-            ? 'bg-green-100 text-green-600'
-            : 'bg-red-100 text-red-500'
+          ? 'bg-green-100 text-green-600'
+          : 'bg-red-100 text-red-500'
           }`}
       >
         {correct ? (
@@ -306,8 +322,8 @@ function QuestionResult({
               <span
                 key={detail.label}
                 className={`text-[11px] px-2 py-0.5 rounded-full ${detail.correct
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-600'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-red-100 text-red-600'
                   }`}
               >
                 {detail.label}
@@ -326,7 +342,8 @@ export function SessionResults({ onNavigate, onEriClick, score = 2, total = 3, s
   const resolvedScore = summary?.score ?? score;
   const resolvedTotal = summary?.total ?? (isEnglishMission ? 3 : total);
   const isPerfect = resolvedScore === resolvedTotal;
-  const [appSettings] = useState<AppSettingsState>(() => getAppSettings());
+  const appSettings = useAppSettings();
+  const progressState = useGameProgress();
   const [xpEarned, setXpEarned] = useState(estimateSessionXP(resolvedScore, resolvedTotal));
   const [currentXP, setCurrentXP] = useState(() => getGameProgress().totalXP);
   const levelXP = 400;
@@ -380,7 +397,15 @@ export function SessionResults({ onNavigate, onEriClick, score = 2, total = 3, s
       <div className="px-6 pt-12 pb-10">
         {/* ── Hero section with Eri ── */}
         <div className="flex flex-col items-center mb-8">
-          {appSettings.showEri && <EriHero isPerfect={isPerfect} reduceMotion={appSettings.reduceMotion} />}
+          {appSettings.showEri && (
+            <EriHero
+              isPerfect={isPerfect}
+              reduceMotion={appSettings.reduceMotion}
+              colorVariant={appSettings.eriColor}
+              hatId={progressState.equippedHat}
+              clothesId={progressState.equippedClothes}
+            />
+          )}
 
           {/* Headline */}
           <motion.h1

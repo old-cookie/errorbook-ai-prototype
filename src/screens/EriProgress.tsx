@@ -1,25 +1,35 @@
 import { Card } from '../components/Card';
 import { ProgressRing } from '../components/ProgressRing';
-import { ChevronLeft, Sparkles, Star, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, Sparkles, Star, CheckCircle2, Coins, Shirt } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useState } from 'react';
 import { EriCharacterSvg } from '../components/EriCharacterSvg';
-import { AppSettingsState, getAppSettings } from '../data/appState';
+import { EriEvolutionPath, updateAppSettings } from '../data/appState';
+import { ERI_COLOR_THEMES, EriColorVariant } from '../data/eriColor';
+import { useAppSettings } from '../data/useAppSettings';
+import { useGameProgress } from '../data/useGameProgress';
+import { Button } from '../components/Button';
 
 interface EriProgressProps {
   onBack: () => void;
+  onNavigate: (screen: string) => void;
 }
 
-const evolutionStages = ['Egg', 'Buddy', 'Mentor', 'Master'];
-const currentStageIndex = 2;
+const evolutionStages: Array<{ path: EriEvolutionPath; label: string }> = [
+  { path: 1, label: 'Egg' },
+  { path: 2, label: 'Kid' },
+  { path: 3, label: 'Default' },
+];
 
 const unlockedPerks = [
   'New encouragement messages',
   'Special badge border'
 ];
 
-export function EriProgress({ onBack }: EriProgressProps) {
-  const [appSettings] = useState<AppSettingsState>(() => getAppSettings());
+export function EriProgress({ onBack, onNavigate }: EriProgressProps) {
+  const appSettings = useAppSettings();
+  const progress = useGameProgress();
+  const selectedPath = appSettings.eriEvolutionPath;
+  const currentStageIndex = evolutionStages.findIndex((stage) => stage.path === selectedPath);
   const level = 7;
   const levelTitle = "Learner's Ally";
   const ringProgress = 76;
@@ -49,6 +59,10 @@ export function EriProgress({ onBack }: EriProgressProps) {
                 <EriCharacterSvg
                   state={ringProgress >= 75 ? 'correct' : 'thinking'}
                   reduceMotion={appSettings.reduceMotion}
+                  colorVariant={appSettings.eriColor}
+                  hatId={progress.equippedHat}
+                  clothesId={progress.equippedClothes}
+                  evolutionPath={selectedPath}
                   size={84}
                 />
                 <div className="flex-1">
@@ -65,6 +79,58 @@ export function EriProgress({ onBack }: EriProgressProps) {
         )}
 
         <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <Card padding="md" className="mb-4 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+            <div className="flex items-center justify-between gap-3">
+              <div className="inline-flex items-center gap-2">
+                <Coins size={18} className="text-amber-600" />
+                <span className="text-sm font-semibold text-amber-800">{progress.coins} coins</span>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => onNavigate('eri-customize')}
+                icon={<Shirt size={16} />}
+              >
+                Customize
+              </Button>
+            </div>
+          </Card>
+
+          <Card padding="md">
+            <p className="text-sm font-bold text-gray-900">Eri Color</p>
+            <p className="text-xs text-gray-600 mt-1 mb-3">Change Eri body color here</p>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(ERI_COLOR_THEMES) as EriColorVariant[]).map((variant) => {
+                const palette = ERI_COLOR_THEMES[variant];
+                const isSelected = appSettings.eriColor === variant;
+
+                return (
+                  <button
+                    key={variant}
+                    onClick={() => updateAppSettings({ eriColor: variant })}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors ${isSelected
+                      ? 'border-[#6C5CE7] bg-[#6C5CE7]/5'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full border border-white/60 shadow-sm"
+                      style={{
+                        background: `linear-gradient(135deg, ${palette.bodyStart} 0%, ${palette.bodyMid} 60%, ${palette.bodyEnd} 100%)`,
+                      }}
+                    />
+                    <span className="text-sm font-medium text-gray-700">{palette.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -75,6 +141,10 @@ export function EriProgress({ onBack }: EriProgressProps) {
                   <EriCharacterSvg
                     state={ringProgress >= 85 ? 'correct' : ringProgress >= 60 ? 'idle' : 'thinking'}
                     reduceMotion={appSettings.reduceMotion}
+                    colorVariant={appSettings.eriColor}
+                    hatId={progress.equippedHat}
+                    clothesId={progress.equippedClothes}
+                    evolutionPath={selectedPath}
                     size={92}
                     showLabel={false}
                     className="-mb-1"
@@ -108,42 +178,45 @@ export function EriProgress({ onBack }: EriProgressProps) {
                 const isReached = index <= currentStageIndex;
 
                 return (
-                  <div key={stage} className="flex-1 flex flex-col items-center min-w-0">
+                  <button
+                    key={stage.path}
+                    onClick={() => updateAppSettings({ eriEvolutionPath: stage.path })}
+                    className="flex-1 flex flex-col items-center min-w-0"
+                    type="button"
+                    aria-label={`Evolution path ${stage.path}: ${stage.label}`}
+                    aria-pressed={isCurrent}
+                  >
                     <div className="w-full flex items-center">
                       {index > 0 && (
                         <div
-                          className={`h-1 flex-1 rounded-full ${
-                            isReached ? 'bg-[#6C5CE7]' : 'bg-gray-200'
-                          }`}
+                          className={`h-1 flex-1 rounded-full ${isReached ? 'bg-[#6C5CE7]' : 'bg-gray-200'
+                            }`}
                         />
                       )}
                       <div
-                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-semibold shrink-0 ${
-                          isCurrent
-                            ? 'bg-[#6C5CE7] border-[#6C5CE7] text-white'
-                            : isReached
-                              ? 'bg-purple-100 border-purple-300 text-[#6C5CE7]'
-                              : 'bg-white border-gray-300 text-gray-400'
-                        }`}
+                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-semibold shrink-0 ${isCurrent
+                          ? 'bg-[#6C5CE7] border-[#6C5CE7] text-white'
+                          : isReached
+                            ? 'bg-purple-100 border-purple-300 text-[#6C5CE7]'
+                            : 'bg-white border-gray-300 text-gray-400'
+                          }`}
                       >
                         {index + 1}
                       </div>
                       {index < evolutionStages.length - 1 && (
                         <div
-                          className={`h-1 flex-1 rounded-full ${
-                            index < currentStageIndex ? 'bg-[#6C5CE7]' : 'bg-gray-200'
-                          }`}
+                          className={`h-1 flex-1 rounded-full ${index < currentStageIndex ? 'bg-[#6C5CE7]' : 'bg-gray-200'
+                            }`}
                         />
                       )}
                     </div>
                     <p
-                      className={`text-xs mt-2 font-medium ${
-                        isCurrent ? 'text-[#6C5CE7]' : isReached ? 'text-gray-700' : 'text-gray-400'
-                      }`}
+                      className={`text-xs mt-2 font-medium ${isCurrent ? 'text-[#6C5CE7]' : isReached ? 'text-gray-700' : 'text-gray-400'
+                        }`}
                     >
-                      {stage}
+                      {stage.label}
                     </p>
-                  </div>
+                  </button>
                 );
               })}
             </div>
